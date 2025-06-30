@@ -37,6 +37,8 @@ namespace KinectTool
                 coordinateMapper = Sensor.CoordinateMapper;
                 bodyReader = Sensor.BodyFrameSource.OpenReader();
                 bodyReader.FrameArrived += OnBodyFrameArrived;
+
+                Console.WriteLine("BodyCapturer Initialized");
             }
             catch (Exception ex)
             {

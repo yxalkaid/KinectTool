@@ -1,9 +1,15 @@
 ﻿using Microsoft.Kinect;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace KinectTool
 {
@@ -21,6 +27,21 @@ namespace KinectTool
         /// 是否已连接
         /// </summary>
         private bool IsConnected = false;
+
+        /// <summary>
+        /// UDP
+        /// </summary>
+        private UdpClient udpClient;
+
+        /// <summary>
+        /// 监听者 IP
+        /// </summary>
+        private readonly string serverIp = "127.0.0.1";
+
+        /// <summary>
+        ///  监听者端口
+        /// </summary>
+        private readonly int serverPort = 8081;
 
         public MainWindow()
         {
@@ -68,20 +89,72 @@ namespace KinectTool
             bodySaver = null;
             bodyCapturer?.Dispose();
             bodyCapturer = null;
+
+            // 释放UDP资源
+            if (udpClient != null)
+            {
+                SendCommand("close");
+            }
+            udpClient?.Dispose();
+            udpClient = null;
+        }
+
+        /// <summary>
+        /// 发送UDP命令
+        /// </summary>
+        /// <param name="command"></param>
+        private void SendCommand(string command)
+        {
+            try
+            {
+                if(this.udpClient != null)
+                {
+                    byte[] data = Encoding.UTF8.GetBytes(command);
+                    udpClient.Send(data, data.Length, serverIp, serverPort);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"发送命令失败：{ex.Message}");
+            }
         }
 
         private void initButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.IsConnected == false)
-            {
-                this.InitializeVideoCapturer();
-                this.InitializeAudioCapturer();
-                this.InitializeBodyCapturer();
+            { 
+
+                if (this.RFIDSync.IsChecked == true)
+                {
+                    this.InitializeRFIDCapturer();
+                    Console.WriteLine("初始化RFID数据采集器成功");
+                }
+
+                if (this.videoCheckBox.IsChecked == true)
+                {
+                    this.InitializeVideoCapturer();
+                    Console.WriteLine("初始化视频采集器成功");
+                }
+                if (this.audioCheckBox.IsChecked == true)
+                {
+                    this.InitializeAudioCapturer();
+                    Console.WriteLine("初始化音频采集器成功");
+                }
+                if (this.bodyCheckBox.IsChecked == true)
+                {
+                    this.InitializeBodyCapturer();
+                    Console.WriteLine("初始化骨骼数据采集器成功");
+                }
             }
             else
             {
                 this.DisposeAll();
             }
+
+            this.videoCheckBox.IsEnabled = IsConnected;
+            this.audioCheckBox.IsEnabled = IsConnected;
+            this.bodyCheckBox.IsEnabled = IsConnected;
+            this.RFIDSync.IsEnabled = IsConnected;
 
             this.IsConnected = !this.IsConnected;
             this.initButton.Content = this.IsConnected ? "Disconnect" : "Connect";
@@ -97,14 +170,34 @@ namespace KinectTool
 
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
+            if (this.IsConnected == false)
+            {
+                MessageBoxResult result= MessageBox.Show(
+                    this,
+                    "请先连接设备",
+                    "提示",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information
+                );
+                
+                if (result == MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
             if (this.IsRecording == false)
             {
+                this.StartRFIDSaver();
+
                 this.StartVideoSaver();
                 this.StartAudioSaver();
                 this.StartBodySaver();
             }
             else
             {
+                this.StopRFIDSaver();
+
                 this.StopVideoSaver();
                 this.StopAudioSaver();
                 this.StopBodySaver();

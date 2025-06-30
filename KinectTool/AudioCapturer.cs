@@ -30,6 +30,8 @@ namespace KinectTool
             {
                 audioReader = Sensor.AudioSource.OpenReader();
                 audioReader.FrameArrived += OnAudioFrameArrived;
+
+                Console.WriteLine("AudioCapturer Initialized");
             }
             catch (Exception ex)
             {

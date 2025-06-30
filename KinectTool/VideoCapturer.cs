@@ -49,6 +49,8 @@ namespace KinectTool
                     colorSource.FrameDescription.Height,
                     96, 96, PixelFormats.Bgra32, null
                 );
+
+                Console.WriteLine("VideoCapturer Initialized");
             }
             catch (Exception ex)
             {

@@ -1,12 +1,11 @@
 ﻿using System.Drawing;
+using System.Net.Sockets;
 using System.Windows;
 
 namespace KinectTool
 {
     public partial class MainWindow
     {
-        private readonly System.Drawing.Size size = new System.Drawing.Size(1920, 1080);
-
         /// <summary>
         /// 视频保存目录
         /// </summary>
@@ -102,6 +101,18 @@ namespace KinectTool
                 );
 
                 bodyCapturer.Start();
+            }
+        }
+
+        /// <summary>
+        /// 初始化RFID数据采集器
+        /// </summary>
+        private void InitializeRFIDCapturer()
+        {
+            if(udpClient == null)
+            {
+                udpClient = new UdpClient();
+                SendCommand("init");
             }
         }
 
@@ -232,6 +243,35 @@ namespace KinectTool
             bodyCapturer.FrameArrived -= bodySaver.WriteFrame;
             bodySaver = null;
 
+            return true;
+        }
+
+        /// <summary>
+        /// 开始RFID数据录制
+        /// </summary>
+        private bool StartRFIDSaver()
+        {
+            if(udpClient == null)
+            {
+                return false;
+            }
+
+            this.SendCommand("start");
+            return true;
+        }
+
+        /// <summary>
+        /// 停止RFID数据录制
+        /// </summary>
+        /// <returns></returns>
+        private bool StopRFIDSaver()
+        {
+            if(udpClient == null)
+            {
+                return false;
+            }
+
+            this.SendCommand("stop");
             return true;
         }
     }
