@@ -28,6 +28,8 @@ namespace KinectTool
         /// </summary>
         private bool IsConnected = false;
 
+        private readonly string imagePath = "/Resources/example.jpg";
+
         /// <summary>
         /// UDP
         /// </summary>
@@ -77,6 +79,7 @@ namespace KinectTool
             videoSaver = null;
             videoCapturer?.Dispose();
             videoCapturer = null;
+            this.videoImage.Source= new BitmapImage(new Uri($"pack://application:,,,{imagePath}"));
 
             // 释放音频采集资源
             audioSaver?.Dispose();
@@ -89,6 +92,7 @@ namespace KinectTool
             bodySaver = null;
             bodyCapturer?.Dispose();
             bodyCapturer = null;
+            this.bodyImage.Source = null;
 
             // 释放UDP资源
             if (udpClient != null)
@@ -148,7 +152,21 @@ namespace KinectTool
             }
             else
             {
-                this.DisposeAll();
+                if (IsRecording)
+                {
+                    MessageBoxResult result = MessageBox.Show(
+                        this,
+                        "请先停止录制",
+                        "提示",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information
+                    );
+                    return;
+                }
+                else
+                {
+                    this.DisposeAll();
+                }
             }
 
             this.videoCheckBox.IsEnabled = IsConnected;
@@ -170,24 +188,25 @@ namespace KinectTool
 
         private void startButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.IsConnected == false)
-            {
-                MessageBoxResult result= MessageBox.Show(
-                    this,
-                    "请先连接设备",
-                    "提示",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information
-                );
-                
-                if (result == MessageBoxResult.Yes)
-                {
-                    return;
-                }
-            }
 
             if (this.IsRecording == false)
             {
+                if (this.IsConnected == false)
+                {
+                    MessageBoxResult result = MessageBox.Show(
+                        this,
+                        "请先连接设备",
+                        "提示",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information
+                    );
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        return;
+                    }
+                }
+
                 this.StartRFIDSaver();
 
                 this.StartVideoSaver();
