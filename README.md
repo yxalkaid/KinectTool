@@ -1,4 +1,9 @@
 # KinectTool
+
+## 依赖
+1. Kinect for Windows SDK 2.0
+2. OpenCvSharp
+3. NAudio
 ```
 KinectTool
 ├─ KinectTool
